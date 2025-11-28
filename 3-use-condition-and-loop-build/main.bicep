@@ -58,3 +58,15 @@ resource virtualNetworks 'Microsoft.Network/virtualNetwork@2024-05-01' = [for lo
     subnets: subnetProperties
   }
 }]
+
+// 親 Bicep ファイルを通して出力を渡す
+output serverInfo array = [for i in range(0, length(locations)): {
+  name: databases[i].outputs.serverName
+  location: databases[i].outputs.location
+  fullyQualifiedDomainName: databases[i].outputs.serverFullyQualifiedDomainName
+}]
+
+// あなたの玩具会社は、複数の国と地域で新しいテディ ベアの玩具を発売しようと考えています。 コンプライアンス上の理由から、おもちゃを発売するすべての Azure リージョンにインフラストラクチャを分散させる必要があります。
+// あなたは、複数の場所のさまざまな環境に、同じリソースをデプロイする必要がありました。 デプロイ パラメーターを変更することで、再利用してリソースのデプロイを制御できる柔軟な Bicep ファイルを作成したいと考えていました。
+// 一部のリソースを特定の環境にのみデプロイするには、Bicep ファイルに条件を追加しました。 その後、コピー ループを使用して、さまざまな Azure リージョンにリソースをデプロイしました。 変数ループを使用して、デプロイするリソースのプロパティを定義しました。 最後に、出力ループを使用して、デプロイされたリソースのプロパティを取得しました。
+

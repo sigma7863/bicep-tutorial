@@ -69,6 +69,7 @@ resource sqlServerAudit 'Microsoft.Sql/servers/auditingSetting@2024-05-01-previe
   }
 }
 
+// データベース モジュールに出力を追加する
 output serverName string = sqlServer.name
 output location string = location
 output serverFullyQualifiedDomainName string = sqlServer.properties.fullyQualifiedDomainName
