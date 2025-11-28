@@ -20,7 +20,7 @@ param solutionName string = 'toyhr${uniqueString(resourceGroup().id)}'
 param appServicePlanInstanceCount int = 1
 
 @description('The name and tier of the App Service plan SKU.')
-param appServicePlanSku object 
+param appServicePlanSku object
 // = {
 //   name: 'F1'
 //   tier: 'Free'
@@ -29,8 +29,21 @@ param appServicePlanSku object
 @description('The Azure region into watch the resources should be deployed.')
 param location string = 'eastus'
 
+@secure()
+@description('The administator login username for SQL server.')
+param sqlServerAdministratorLogin string
+
+@secure()
+@description('The administator login password for SQL server.')
+param sqlServerAdministratorPassword string
+
+@description('The name add tier of the SQL database SKU.')
+param sqlDatabaseSku object
+
 var appServicePlanName = '${environmentName}-${solutionName}-plan'
 var appServiceAppName = '${environmentName}-${solutionName}-app'
+var sqlServerName = '${environmentName}-${solutionName}-sql'
+var sqlDatabaseName = 'Employees'
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: appServicePlanName
@@ -50,3 +63,40 @@ resource appServiceApp 'Microsoft.Web/sites@2024-04-01' = {
     httpsOnly: true
   }
 }
+
+// SQLサーバーとデータベースリソースを追加する
+resource sqlServer 'Microsoft.Sql/servers@2024-05-01-preview' = {
+  name: sqlServerName
+  location: location
+  properties: {
+    administratorLogin: sqlServerAdministratorLogin
+    administratorLoginPassword: sqlServerAdministratorPassword
+  }
+}
+
+resource sqlDatabase 'Microsoft.Sql/servers/databases@2024-05-01-preview' = {
+  parent: sqlServer
+  name: sqlDatabaseName
+  location: location
+  sku: {
+    name: sqlDatabaseSku.name
+    tier: sqlDatabaseSku.tier
+  }
+}
+
+// コマンド
+// az deployment group create \
+//   --name main \
+//   --template-file main.bicep \
+//   --parameters main.parameters.dev.json
+
+// keyVaultName='YOUR-KEY-VAULT-NAME'
+// read -s -p "Enter the login name: " login
+// read -s -p "Enter the password: " password
+
+// az keyvault create --name $keyVaultName --location eastus --enabled-for-template-deployment true
+// az keyvault secret set --vault-name $keyVaultName --name "sqlServerAdministratorLogin" --value $login --output none
+// az keyvault secret set --vault-name $keyVaultName --name "sqlServerAdministratorPassword" --value $password --output none
+
+// az keyvault show --name $keyVaultName --query id --output tsv
+// 例: /subscriptions/aaaa0a0a-bb1b-cc2c-dd3d-eeeeee4e4e4e/resourceGroups/PlatformResources/providers/Microsoft.KeyVault/vaults/toysecrets
